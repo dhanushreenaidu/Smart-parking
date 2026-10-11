@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking Slot Selection</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+            text-align: center;
+            color: black;
+        }
+
+        header {
+            background-color: #0072ff;
+            color: white;
+            padding: 15px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-buttons {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-btn, .logout-btn {
+            background-color: white;
+            color: #0072ff;
+            border: none;
+            padding: 8px 15px;
+            font-size: 1em;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .profile-btn:hover, .logout-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #session-timer {
+            background-color: white;
+            color: red;
+            padding: 8px 15px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 50px;
+        }
+
+        .parking-area {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            width: 55%;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .slot {
+            width: 60px;
+            height: 80px;
+            border: 2px solid #3b3838;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        .slot.available {
+            background: #1ac41a;
+            color: white;
+        }
+
+        .slot.occupied {
+            background: rgba(228, 16, 16, 0.7);
+            cursor: not-allowed;
+            color: white;
+        }
+
+        .slot.selected {
+            border: 3px solid #0072ff;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .confirm-btn {
+            background-color: #0072ff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            transition: 0.3s;
+        }
+
+        .confirm-btn:hover {
+            background-color: #4CAF50;
+        }
+
+        .form-popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 1000;
+            width: 300px;
+        }
+
+        .form-popup h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .form-popup .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff0000;
+            cursor: pointer;
+        }
+
+        .form-popup input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-popup button {
+            background-color: #0072ff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .form-popup button:hover {
+            background-color: #4CAF50;
+        }
+
+        .selected-slots {
+            background: white;
+            padding: 15px;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+
+        .selected-slots h3 {
+            color: #0072ff;
+            margin-bottom: 10px;
+        }
+
+        .selected-slots-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+
+        .selected-slot-item {
+            background: #e3f2fd;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-slot {
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .slot.selected {
+            border: 3px solid #0072ff;
+            background: #4a90e2;
+            color: white;
+        }
+
+        .form-popup {
+            width: 400px;
+        }
+
+        .slot-details {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .vehicle-container {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .remove-vehicle {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: red;
+            cursor: pointer;
+        }
+
+        .add-vehicle-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Smart Parking Slot Selection</h1>
+        <div class="header-buttons">
+            <span id="session-timer">Session Expires in: 05:00</span>
+            <button class="profile-btn" onclick="redirectToHome()">🏠 Map</button>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </header>
+
+    <div class="selected-slots">
+        <h3>Selected Slots</h3>
+        <div class="selected-slots-list" id="selected-slots-list">
+            <!-- Selected slots will be displayed here -->
+        </div>
+        <button id="confirm-spot" class="confirm-btn" style="display: none;" onclick="openPopup()">Book Selected Slots</button>
+    </div>
+
+    <div class="parking-area" id="parking-area"></div>
+
+    <div id="form-popup" class="form-popup">
+        <span class="close-btn" onclick="closePopup()">❌</span>
+        <h3>Enter Vehicle Details</h3>
+        <div id="selected-slots-summary"></div>
+        <form id="vehicleForm">
+            <div id="vehicle-details-container">
+                <!-- Vehicle details will be added here -->
+            </div>
+            <button type="button" class="add-vehicle-btn" onclick="addVehicleFields()">+ Add Another Vehicle</button>
+            <button type="submit">Confirm Booking</button>
+        </form>
+    </div>
+
+    <script>
+        let selectedSlots = [];
+        let parkingSlots = [];
+
+        // Initialize slots with local data
+        function initializeSlots() {
+            console.log("Initializing slots...");
+            parkingSlots = [];
+            
+            // Create 25 parking slots
+            for (let i = 1; i <= 25; i++) {
+                const slotId = `A${i.toString().padStart(2, '0')}`;
+                parkingSlots.push({
+                    id: slotId,
+                    occupied: Math.random() < 0.3 // Randomly mark some slots as occupied
+                });
+            }
+            
+            loadParkingSlots();
+            updateSelectedSlotsList();
+        }
+
+        function loadParkingSlots() {
+            const parkingArea = document.getElementById("parking-area");
+            parkingArea.innerHTML = "";
+
+            parkingSlots.forEach((slot) => {
+                const div = document.createElement("div");
+                div.classList.add("slot");
+                div.classList.add(slot.occupied ? "occupied" : "available");
+                if (selectedSlots.find(s => s.id === slot.id)) {
+                    div.classList.add("selected");
+                }
+                div.setAttribute("id", `slot-${slot.id}`);
+                div.innerText = slot.id;
+                
+                if (!slot.occupied) {
+                    div.onclick = () => selectSlot(slot, div);
+                }
+                
+                parkingArea.appendChild(div);
+            });
+        }
+
+        function selectSlot(slot, element) {
+            if (slot.occupied) return;
+
+            const index = selectedSlots.findIndex(s => s.id === slot.id);
+            if (index === -1) {
+                selectedSlots.push(slot);
+                element.classList.add("selected");
+            } else {
+                selectedSlots.splice(index, 1);
+                element.classList.remove("selected");
+            }
+
+            updateSelectedSlotsList();
+        }
+
+        function updateSelectedSlotsList() {
+            const listContainer = document.getElementById("selected-slots-list");
+            listContainer.innerHTML = "";
+            
+            selectedSlots.forEach(slot => {
+                const div = document.createElement("div");
+                div.className = "selected-slot-item";
+                div.innerHTML = `
+                    <span>Slot ${slot.id}</span>
+                    <span class="remove-slot" onclick="removeSelectedSlot('${slot.id}')">✖</span>
+                `;
+                listContainer.appendChild(div);
+            });
+
+            document.getElementById("confirm-spot").style.display = 
+                selectedSlots.length > 0 ? "block" : "none";
+        }
+
+        function removeSelectedSlot(slotId) {
+            const index = selectedSlots.findIndex(s => s.id === slotId);
+            if (index !== -1) {
+                selectedSlots.splice(index, 1);
+                const slotElement = document.querySelector(`#slot-${slotId}`);
+                if (slotElement) {
+                    slotElement.classList.remove("selected");
+                }
+                updateSelectedSlotsList();
+            }
+        }
+
+        function openPopup() {
+            if (selectedSlots.length === 0) {
+                alert("Please select at least one slot.");
+                return;
+            }
+
+            const summary = document.getElementById("selected-slots-summary");
+            summary.innerHTML = `<div class="slot-details">Selected Slots: ${selectedSlots.map(s => s.id).join(", ")}</div>`;
+            
+            const container = document.getElementById("vehicle-details-container");
+            container.innerHTML = ""; // Clear existing fields
+            addVehicleFields(); // Add initial vehicle fields
+
+            document.getElementById("form-popup").style.display = "block";
+        }
+
+        function addVehicleFields() {
+            const container = document.getElementById("vehicle-details-container");
+            const vehicleIndex = container.children.length + 1;
+            
+            const vehicleDiv = document.createElement("div");
+            vehicleDiv.className = "vehicle-container";
+            vehicleDiv.innerHTML = `
+                <span class="remove-vehicle" onclick="removeVehicleFields(this)" ${vehicleIndex === 1 ? 'style="display:none"' : ''}>✖</span>
+                <h4>Vehicle ${vehicleIndex}</h4>
+                <input type="text" name="vehicleNumber${vehicleIndex}" placeholder="Enter Vehicle Number" required>
+                <input type="text" name="phoneNumber${vehicleIndex}" placeholder="Enter Phone Number" required>
+            `;
+            container.appendChild(vehicleDiv);
+        }
+
+        function removeVehicleFields(button) {
+            button.parentElement.remove();
+            // Renumber the remaining vehicle containers
+            const containers = document.querySelectorAll('.vehicle-container');
+            containers.forEach((container, index) => {
+                container.querySelector('h4').textContent = `Vehicle ${index + 1}`;
+            });
+        }
+
+        function submitBookings(event) {
+            event.preventDefault();
+            
+            if (selectedSlots.length === 0) {
+                alert("Please select at least one slot.");
+                return;
+            }
+
+            const vehicles = document.querySelectorAll('.vehicle-container');
+            if (vehicles.length > selectedSlots.length) {
+                alert("You have more vehicles than selected slots. Please adjust your selection.");
+                return;
+            }
+
+            // Create bookings array for local storage
+            const bookings = [];
+            vehicles.forEach((vehicle, index) => {
+                if (index >= selectedSlots.length) return;
+
+                const vehicleNumber = vehicle.querySelector(`input[name^="vehicleNumber"]`).value;
+                const phoneNumber = vehicle.querySelector(`input[name^="phoneNumber"]`).value;
+                const slot = selectedSlots[index];
+
+                const bookingData = {
+                    slotId: slot.id,
+                    vehicleNumber: vehicleNumber,
+                    phoneNumber: phoneNumber,
+                    timestamp: new Date().toISOString(),
+                    status: 'active'
+                };
+
+                bookings.push(bookingData);
+                
+                // Update slot status
+                const slotIndex = parkingSlots.findIndex(s => s.id === slot.id);
+                if (slotIndex !== -1) {
+                    parkingSlots[slotIndex].occupied = true;
+                }
+            });
+
+            // Store bookings in localStorage
+            const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            localStorage.setItem('bookings', JSON.stringify([...existingBookings, ...bookings]));
+
+            alert("Bookings confirmed successfully!");
+            selectedSlots = [];
+            closePopup();
+            loadParkingSlots();
+        }
+
+        function closePopup() {
+            document.getElementById("form-popup").style.display = "none";
+        }
+
+        function redirectToHome() {
+            window.location.href = "location.html";
+        }
+
+        function logout() {
+            window.location.href = "login.html";
+        }
+
+        // Session timer
+        let timeLeft = 300; // 5 minutes
+        const timerElement = document.getElementById("session-timer");
+        
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `Session Expires in: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                logout();
+            } else {
+                timeLeft--;
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+
+        // Event Listeners
+        document.getElementById("vehicleForm").addEventListener("submit", submitBookings);
+
+        // Initialize slots when page loads
+        window.onload = initializeSlots;
+    </script>
+
+</body>
+</html>
