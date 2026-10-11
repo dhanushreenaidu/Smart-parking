@@ -32,11 +32,8 @@ The system features role-based access control (Drivers and Administrators) with 
 > **Key design principle:** Client-side JavaScript interacts directly with Firebase services, secured by robust server-side Firestore security rules (`firestore.rules`) enforcing data ownership and admin privileges[cite: 10].
 
 ---
-
-## High-level architecture
-
-
 ```
+## High-level architecture
 
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        Browser Frontend (HTML/JS)                      │
@@ -51,7 +48,7 @@ The system features role-based access control (Drivers and Administrators) with 
 └──────────────────────────────────────────────>   └─────────────────────┘
 
 ```
-
+```
 **Request lifecycle**
 1. Users authenticate via `login.html` / `register.html` using Firebase Auth[cite: 6, 12].
 2. The interactive map (`location.html`) allows users to select coordinates and evaluate live availability via spatial distance checks[cite: 12].
@@ -62,8 +59,6 @@ The system features role-based access control (Drivers and Administrators) with 
 
 ## Project structure
 
-
-```
 
 Smart-parking/
 ├── public/                     # Hosting public assets
